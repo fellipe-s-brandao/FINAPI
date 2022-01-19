@@ -7,6 +7,22 @@ app.use(express.json());
 
 const customers = [];
 
+//middleware
+function verifyIfExistsAccountCPF(request, response, next) {
+    const { cpf } = request.params;
+
+    //retorna oq a gente precisa
+    const customer = customers.find(costumer => costumer.cpf === cpf);
+
+    if(!customer) {
+        return response.status(404).json({error: "Customer not found!"})
+    }
+
+    request.customer = customer;
+
+    return next();
+}
+
 /**
  * cpf - string
  * name - string
@@ -36,17 +52,10 @@ app.post('/account', (request, response) => {
     return response.status(201).send("Conta criada com suceso")
 });
 
-app.get('/statement/:cpf', (request, response) => {
-    const { cpf } = request.params;
+app.get('/statement/:cpf', verifyIfExistsAccountCPF, (request, response) => {
+    const { customer } = request;
 
-    //retorna oq a gente precisa
-    const customer = customers.find(costumer => costumer.cpf === cpf);
-
-    if(!customer) {
-        return response.status(404).json({error: "Customer not found!"})
-    }
-
-    return response.json(customers.statement);
+    return response.json(customer.statement);
 });
 
 app.listen(3333);
